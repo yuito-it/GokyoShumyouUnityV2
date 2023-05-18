@@ -1,0 +1,13 @@
+.vscode
+.vscode/setting.json
+*.meta
+Logs
+Assets/TextMesh Pro
+Library
+Unity*.csproj
+obj
+ProjectSettings
+Temp
+UserSettings
+PsdPlugin.csproj
+Assembly*
