@@ -206,7 +206,7 @@ public class Game_main : MonoBehaviour
                 {
                     param = output.Substring(0, 2);
                 }
-                StringToObj(param, true);
+                StringToObj(param, false);
             }
         }
     }
