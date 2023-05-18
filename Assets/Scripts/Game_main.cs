@@ -12,7 +12,7 @@ public class Game_main : MonoBehaviour
     List<GameObject> BlackStone = new List<GameObject>();
     char[] posX = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T' };
 
-    List<string> procInputStr = new List<string>();
+    List<GTP_Send_Param> procInput = new List<GTP_Send_Param>();
 
     [SerializeField]
     GameObject whitePrefab;
@@ -81,7 +81,9 @@ public class Game_main : MonoBehaviour
             //TODO:ここに、クリック時の処理記述。
             while (true)
             {
-                //TODO:Listにwriteしたstringいれとく。
+                //TODO:ListにwriteしたParamいれとく。
+                //TODO:Listの最初から順に取得。Sendedならパス。
+                //TODO:Listの中にSend_Paramの奴あるから、Sended=trueする。
             }
         }
         catch
@@ -190,23 +192,39 @@ public class Game_main : MonoBehaviour
     /// <param name="output">アウトプットされたデータを渡す。</param>
     async void outputProcess(string output)
     {
+        //空出力を無視
         if (output.Length == 0 || output[0] == ' ') return;
+        //残りのコマンドリストから今実行したものを削除
+        procInput.RemoveAt(0);
+        
+        //GTPがErrorはいたらError出力
         if (output[0] == '?') UE.Debug.LogError("Error");
         if (output[0] == '=')
         {
+            //=消す。
             output.Remove(0, 1);
-            if (Array.Exists<char>(posX, item => item == output[0]))
+
+            //残ってる出力ないか探す。
+            while (output.Length > 0)
             {
-                string param;
-                if (output[2] == ' ')
+                //posXに一文字目あれば、それは碁盤上の座標として処理。
+                if (Array.Exists<char>(posX, item => item == output[0]))
                 {
-                    param = output.Substring(0, 1);
+                    //y座標が何桁あるか
+                    string param;
+                    if (output[2] == ' ')
+                    {
+                        param = output.Substring(0, 1);
+                        output.Remove(0, 1);
+                    }
+                    else
+                    {
+                        param = output.Substring(0, 2);
+                        output.Remove(0, 2);
+                    }
+                    //戻り値のオブジェクトをアクティブ化
+                    StringToObj(param, procInput[0].Black).SetActive(true);
                 }
-                else
-                {
-                    param = output.Substring(0, 2);
-                }
-                StringToObj(param, false);
             }
         }
     }
@@ -231,4 +249,15 @@ public class SettingData
 public class GTP_Path_set
 {
     public string url;
+}
+
+/// <summary>
+/// GTPに送るパラムのクラス
+/// </summary>
+public class GTP_Send_Param
+{
+    public string cmd;
+    public bool putStoneCmd;
+    public bool Black;
+    public bool Sended;
 }
