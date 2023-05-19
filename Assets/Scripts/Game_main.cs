@@ -13,6 +13,7 @@ public class Game_main : MonoBehaviour
     char[] posX = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T' };
 
     List<GTP_Send_Param> procInput = new List<GTP_Send_Param>();
+    List<GTP_Send_Param> outputWaitingTasks = new List<GTP_Send_Param>();
 
     [SerializeField]
     GameObject whitePrefab;
@@ -30,7 +31,14 @@ public class Game_main : MonoBehaviour
         settingData = new SettingData();
         settingData.komi = 5;
         settingData.Black = true;
-        settingData.GTP[1].url = "C:\\Users\\sigum\\Documents\\ray-windows\\ray64.exe";
+        settingData.GTP.Add(new GTP_Path_set()
+        {
+            url = "C:\\Users\\sigum\\Documents\\ray-windows\\ray64.exe"
+        });
+        StartCoroutine(GTP_Process_Manager());
+
+        //初期化GTPプロンプト
+        GTP_Set_Cmd();
     }
 
     // Update is called once per frame
@@ -48,7 +56,7 @@ public class Game_main : MonoBehaviour
         UE.Debug.Log("Start:GTP_Ptocess_Manager");
         ProcessStartInfo startInfo = new ProcessStartInfo()
         {
-            FileName = settingData.GTP[1].url,
+            FileName = settingData.GTP[0].url,
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardError = false,
@@ -60,7 +68,7 @@ public class Game_main : MonoBehaviour
         Process process = new Process();
         CancellationTokenSource cancellationToken = new CancellationTokenSource();
         process.EnableRaisingEvents = true;
-
+        process.StartInfo = startInfo;
 
         //アウトプット受け取るイベントハンドラー
         process.OutputDataReceived += (sender, ev) =>
@@ -76,14 +84,15 @@ public class Game_main : MonoBehaviour
                 UE.Debug.Log($"Process:exited");
                 cancellationToken.Cancel();
             };
+        process.Start();
         try
         {
-            //TODO:ここに、クリック時の処理記述。
             while (true)
             {
-                //TODO:ListにwriteしたParamいれとく。
-                //TODO:Listの最初から順に取得。Sendedならパス。
-                //TODO:Listの中にSend_Paramの奴あるから、Sended=trueする。
+                GTP_Send_Param param = procInput[0];
+                UE.Debug.Log(param.cmd);
+                process.StandardInput.WriteLine(param.cmd);
+                outputWaitingTasks.Add(param);
             }
         }
         catch
@@ -195,8 +204,8 @@ public class Game_main : MonoBehaviour
         //空出力を無視
         if (output.Length == 0 || output[0] == ' ') return;
         //残りのコマンドリストから今実行したものを削除
-        procInput.RemoveAt(0);
-        
+        outputWaitingTasks.RemoveAt(0);
+
         //GTPがErrorはいたらError出力
         if (output[0] == '?') UE.Debug.LogError("Error");
         if (output[0] == '=')
@@ -229,6 +238,23 @@ public class Game_main : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// GTPのコミやその他もろもろの設定
+    /// </summary>
+    void GTP_Set_Cmd()
+    {
+        procInput.Add(new GTP_Send_Param()
+        {
+            cmd = "boardsize 19",
+            putStoneCmd = false
+        });
+        procInput.Add(new GTP_Send_Param()
+        {
+            cmd = "place_free_handicap 5",
+            putStoneCmd = true,
+            Black = true
+        });
+    }
 }
 
 
@@ -238,7 +264,7 @@ public class Game_main : MonoBehaviour
 /// </summary>
 public class SettingData
 {
-    public GTP_Path_set[] GTP = new GTP_Path_set[1];
+    public List<GTP_Path_set> GTP = new List<GTP_Path_set>();
     public int komi;
     public bool Black;
 }
@@ -259,5 +285,4 @@ public class GTP_Send_Param
     public string cmd;
     public bool putStoneCmd;
     public bool Black;
-    public bool Sended;
 }
