@@ -522,7 +522,7 @@ GameObject:
   m_Component:
   - component: {fileID: 880743721}
   - component: {fileID: 880743720}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Goban-19
   m_TagString: Untagged
   m_Icon: {fileID: 0}

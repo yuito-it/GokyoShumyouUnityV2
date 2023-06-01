@@ -35,16 +35,30 @@ public class Game_main : MonoBehaviour
         {
             url = "C:\\Users\\sigum\\Documents\\ray-windows\\ray64.exe"
         });
-        StartCoroutine(GTP_Process_Manager());
+        //TODO:GTP対応
+        //StartCoroutine(GTP_Process_Manager());
 
         //初期化GTPプロンプト
-        GTP_Set_Cmd();
+        //GTP_Set_Cmd();
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        if (Input.GetMouseButtonUp(0))
+        {
+            UE.Debug.Log("IF");
+            GameObject gameObject = PosToObj(Camera.main.ScreenToWorldPoint(Input.mousePosition), settingData.Black);
+            if (gameObject.activeSelf)
+            {
+                return;
+            }
+            else
+            {
+                gameObject.SetActive(true);
+                UE.Debug.Log(gameObject.name);
+            }
+        }
     }
 
     /// <summary>
@@ -124,6 +138,8 @@ public class Game_main : MonoBehaviour
                 float y = b * 0.48f - 10;
                 Vector3 pos = new Vector3(x, y, 0);
                 GameObject ins = Instantiate(whitePrefab, pos, Quaternion.identity) as GameObject;
+                ins.SetActive(false);
+                ins.name = "W - " + i.ToString() + " - " + b.ToString();
                 WhiteStone.Add(ins);
             }
         }
@@ -134,7 +150,10 @@ public class Game_main : MonoBehaviour
             {
                 float y = b * 0.48f - 10;
                 Vector3 pos = new Vector3(x, y, 0);
-                BlackStone.Add(Instantiate(blackPrefab, pos, Quaternion.identity));
+                GameObject ins = Instantiate(blackPrefab, pos, Quaternion.identity);
+                ins.SetActive(false);
+                ins.name = "B - " + i.ToString() + " - " + b.ToString();
+                BlackStone.Add(ins);
             }
         }
     }
